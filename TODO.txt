@@ -1,0 +1,7 @@
+"""
+
+uzum market apisini yaratish (only API)
+kategoriya, saralangan, savat, mahsulot, haridor, sotuvchi, hisobot, buyurtma
+filter, search, sort
+
+"""
