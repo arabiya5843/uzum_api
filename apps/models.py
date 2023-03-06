@@ -47,15 +47,6 @@ class Product(BaseModel):
         return self.name
 
 
-class Order(Model):
-    user = ForeignKey('user.User', CASCADE)
-    product = ForeignKey('Product', CASCADE)
-    quantity = IntegerField(default=1)
-
-    def __str__(self):
-        return f"{self.product.name}"
-
-
 class Favourite(Model):
     product = ForeignKey('Product', CASCADE)
     user = ForeignKey('user.User', CASCADE)
@@ -71,6 +62,13 @@ class Cart(Model):
 
     def __str__(self):
         return f'{self.product.name}'
+
+
+class Order(BaseModel):
+    cart = ForeignKey('Cart', CASCADE)
+
+    def __str__(self):
+        return f"{self.cart}"
 
 
 class ProductImage(Model):
