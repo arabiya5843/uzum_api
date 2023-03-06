@@ -1,10 +1,13 @@
-from django.contrib.auth.models import AbstractUser
-from django.db.models import CharField, TextField, SmallIntegerField, DecimalField, ForeignKey, \
-    CASCADE, Model
+from django.db.models import CharField, TextField, DecimalField, ForeignKey, \
+    CASCADE, Model, ImageField, IntegerField, DateTimeField
 
 
-class User(AbstractUser):
-    pass
+class BaseModel(Model):
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
 
 
 class Category(Model):
@@ -14,34 +17,73 @@ class Category(Model):
         return self.name
 
 
-class Product(Model):
-    title = CharField(max_length=255)
-    description = TextField(null=True, blank=True)
-    price = DecimalField(decimal_places=2, max_digits=9)
-    category = ForeignKey(Category, on_delete=CASCADE, related_name='categories')
-    owner = ForeignKey(User, CASCADE)
-
-    def __str__(self):
-        return f'{self.title}'
-
-
 class SubCategory(Model):
     name = CharField(max_length=100)
-    category = ForeignKey(Category, on_delete=CASCADE, related_name='subcategories')
+    category = ForeignKey('Category', CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class Shop(BaseModel):
+    name = CharField(max_length=50)
+    description = TextField(max_length=512)
+    image = ImageField(upload_to='shop_image/', null=True, blank=True)
+    merchant = ForeignKey('user.User', CASCADE, related_name='merchant', null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Product(BaseModel):
+    name = CharField(max_length=255)
+    description = CharField(max_length=1000)
+    image = ImageField(upload_to='images/', null=True, blank=True)
+    price = DecimalField(max_digits=9, decimal_places=2)
+    amount = IntegerField(default=1)
+    category = ForeignKey(Category, CASCADE, related_name='product', null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Order(Model):
+    user = ForeignKey('user.User', CASCADE)
+    product = ForeignKey('Product', CASCADE)
+    quantity = IntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.product.name}"
 
 
 class Favourite(Model):
-    product = ForeignKey(Product, on_delete=CASCADE, related_name='products')
-    user = ForeignKey(User, on_delete=CASCADE, related_name='users')
+    product = ForeignKey('Product', CASCADE)
+    user = ForeignKey('user.User', CASCADE)
 
     def __str__(self):
-        return f'{self.user.email}({self.user.id}) -> {self.product.title}'
+        return f'{self.user.email}({self.user.id}) -> {self.product.name}'
 
 
 class Cart(Model):
-    product = ForeignKey(Product, on_delete=CASCADE, related_name='products')
-    user = ForeignKey(User, on_delete=CASCADE, related_name='users')
-    quantity = SmallIntegerField(default=1)
+    product = ForeignKey('Product', CASCADE)
+    user = ForeignKey('user.User', CASCADE)
+    quantity = IntegerField(default=1)
 
     def __str__(self):
-        return f'{self.id} - {self.product.title} ({self.quantity})'
+        return f'{self.product.name}'
+
+
+class ProductImage(Model):
+    image = ImageField(upload_to='shops/images/')
+    product = ForeignKey('Product', CASCADE)
+
+
+class Report(Model):
+    product = ForeignKey('Product', CASCADE)
+    user = ForeignKey('user.User', CASCADE)
+
+    def __str__(self):
+        return f'{self.product.name}'
+
+
+
