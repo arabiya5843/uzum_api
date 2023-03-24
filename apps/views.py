@@ -22,14 +22,7 @@ class ProductModelViewSet(ModelViewSet):
     ordering_fields = ['price']
     permission_classes = (IsAuthenticated, IsOwner,)
 
-    def perform_create(self, serializer):
-        # when a product is saved, its saved how it is the owner
-        serializer.save(owner=self.request.user)
 
-    def get_queryset(self):
-        # after get all products on DB it will be filtered by its owner and return the queryset
-        owner_queryset = self.queryset.filter(owner=self.request.user)
-        return owner_queryset
 
 
 class CategoryModelViewSet(ModelViewSet):
