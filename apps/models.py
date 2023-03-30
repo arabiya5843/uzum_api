@@ -65,10 +65,12 @@ class Cart(Model):
 
 
 class Order(BaseModel):
+    user = ForeignKey('user.User', CASCADE)
     cart = ForeignKey('Cart', CASCADE)
+    product = ForeignKey('Product', CASCADE)
 
     def __str__(self):
-        return f"{self.cart}"
+        return f"{self.product.name}"
 
 
 class ProductImage(Model):
@@ -76,7 +78,7 @@ class ProductImage(Model):
     product = ForeignKey('Product', CASCADE)
 
 
-class Report(Model):
+class Wishlist(Model):
     product = ForeignKey('Product', CASCADE)
     user = ForeignKey('user.User', CASCADE)
 

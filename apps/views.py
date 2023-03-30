@@ -1,16 +1,44 @@
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from django.db.models import F, Sum
+from contextlib import suppress
+from datetime import timedelta, datetime
 
-from apps.user.permissions import IsOwner
+from django.db.models import F, Sum
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
 from apps.filters import ProductFilter
-from apps.models import Product, Category, Shop, ProductImage, Favourite, Cart, Report, Order, SubCategory
-from apps.serializers import ProductModelSerializer, CategoryModelSerializer, ProductImageModelSerializer, \
-    ShopModelSerializer, CartModelSerializer, FavouriteModelSerializer, ReportModelSerializer, OrderModelSerializer, SubCategoryModelSerializer
+from apps.models import Category, Shop, Product, Cart, Wishlist, Order, SubCategory, Favourite, ProductImage
+from apps.serializers import CategoryModelSerializer, ShopModelSerializer, ProductModelSerializer, \
+    WishlistModelSerializer, OrderCreateModelSerializer, CartModelSerializer
+from apps.user.permissions import IsMerchant, IsMerchantOrReadOnly, IsClient, IsAdminUserOrReadOnly, IsAdminUser, \
+    IsMerchantOrReadOnlyOrAdminUser
+
+
+class CategoryModelViewSet(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategoryModelSerializer
+    permission_classes = [IsAdminUserOrReadOnly, IsAuthenticated]
+
+
+class SubCategoryModelViewSet(ModelViewSet):
+    queryset = SubCategory.objects.all()
+    serializer_class = CategoryModelSerializer
+    permission_classes = [IsAdminUserOrReadOnly, IsAuthenticated]
+
+
+class ShopModelViewSet(ModelViewSet):
+    queryset = Shop.objects.all()
+    serializer_class = ShopModelSerializer
+    permission_classes = [IsMerchantOrReadOnlyOrAdminUser, IsAuthenticated]
+
+
+class ProductImageModelViewSet(ModelViewSet):
+    queryset = ProductImage.objects.all()
+    serializer_class = ShopModelSerializer
+    permission_classes = [IsMerchantOrReadOnlyOrAdminUser,]
 
 
 class ProductModelViewSet(ModelViewSet):
@@ -20,66 +48,68 @@ class ProductModelViewSet(ModelViewSet):
     filterset_class = ProductFilter
     search_fields = ['name']
     ordering_fields = ['price']
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = [IsAuthenticated, IsMerchantOrReadOnlyOrAdminUser]
+
+    # def perform_create(self, serializer):
+    #     # when a product is saved, its saved how it is the owner
+    #     serializer.save(user=self.request.user)
+    #
+    # def get_queryset(self):
+    #     # after get all products on DB it will be filtered by its owner and return the queryset
+    #     merchant_queryset = self.queryset.filter(user=self.request.user)
+    #     return merchant_queryset
 
 
+class FavouriteModelViewSet(ModelViewSet):
+    queryset = Favourite.objects.all()
+    serializer_class = CartModelSerializer
+    permission_classes = [IsAuthenticated, IsClient]
 
-
-class CategoryModelViewSet(ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategoryModelSerializer
-
-
-class SubCategoryModelViewSet(ModelViewSet):
-    queryset = SubCategory.objects.all()
-    serializer_class = SubCategoryModelSerializer
-
-
-class ShopModelViewSet(ModelViewSet):
-    queryset = Shop.objects.all()
-    serializer_class = ShopModelSerializer
-
-
-class ProductImageModelViewSet(ModelViewSet):
-    queryset = ProductImage.objects.all()
-    serializer_class = ProductImageModelSerializer
+    def get_queryset(self):
+        user = self.request.user
+        return Favourite.objects.filter(user=user)
 
 
 class CartModelViewSet(ModelViewSet):
     queryset = Cart.objects.all()
     serializer_class = CartModelSerializer
-    permission_classes = (IsAuthenticated, IsOwner)
+    permission_classes = [IsAuthenticated, IsClient]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Cart.objects.filter(user=user)
 
     @action(['GET'], False, 'report', 'report')
     def get_carts_count(self, request):
         count = self.get_queryset().filter(status='accepted').aggregate(Sum('quantity'))
         return Response({'Sotilgan mahsulot: ': count.get('quantity__sum')})
+    # @action(['GET'], False, 'report', 'report')
+    # def get_carts_count(self, request):
+    #     last_month = datetime.today() - timedelta(days=30)
+    #     qs = self.get_queryset()
+    #     count = qs.filter(created_at__gte=last_month, status='accepted').aggregate(Sum('quantity'))
+    #     shop = Shop.name
+    #     return Response(
+    #         {
+    #             'shop': shop,
+    #             'test': count.get('quantity__sum')
+    #         }
+    #     )
 
 
-class FavouriteModelViewSet(ModelViewSet):
-    queryset = Favourite.objects.all()
-    serializer_class = FavouriteModelSerializer
-
-
-class ReportModelViewSet(ModelViewSet):
-    queryset = Report.objects.all()
-    serializer_class = ReportModelSerializer
+class WishlistModelViewSet(ModelViewSet):
+    queryset = Wishlist.objects.all()
+    serializer_class = WishlistModelSerializer
+    permission_classes = [IsAuthenticated, IsMerchant,]
 
 
 class OrderModelViewSet(ModelViewSet):
     queryset = Order.objects.all()
-    serializer_class = OrderModelSerializer
-    permission_classes = (IsAuthenticated, IsOwner,)
+    serializer_class = OrderCreateModelSerializer
+    permission_classes = [IsAuthenticated, IsClient,]
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        data = self.request.data
-        cart = data.get('cart')
-        product = data.get('product')
-        quantity = Cart.objects.get(pk=cart).quantity
-        Product.objects.filter(pk=product).update(amount=F('amount') - quantity)
-        Cart.objects.filter(pk=cart).update(status='accepted')
-        return qs
-
+        user = self.request.user
+        return Order.objects.filter(user=user)
 
 

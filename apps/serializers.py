@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
-
-from apps.models import Category, SubCategory, Shop, Product, Cart, Report, Order, Favourite, ProductImage
+from rest_framework.fields import SerializerMethodField
+from apps.models import Category, SubCategory, Shop, Product, Cart, Wishlist, Order, Favourite, ProductImage
 
 
 class CategoryModelSerializer(ModelSerializer):
@@ -27,22 +27,38 @@ class ProductModelSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class ProductImageModelSerializer(ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = '__all__'
+
+
 class CartModelSerializer(ModelSerializer):
     class Meta:
         model = Cart
         fields = '__all__'
 
 
-class ReportModelSerializer(ModelSerializer):
+class WishlistModelSerializer(ModelSerializer):
     class Meta:
-        model = Report
+        model = Wishlist
         fields = '__all__'
 
 
-class ProductImageModelSerializer(ModelSerializer):
+class OrderCreateModelSerializer(ModelSerializer):
     class Meta:
-        model = ProductImage
-        fields = '__all__'
+        model = Order
+        fields = ('id', 'product', 'cart', 'user')
+        # fields = '__all__'
+
+
+class CartReportModelSerializer(ModelSerializer):
+    count = SerializerMethodField()
+
+
+    class Meta:
+        model = Cart
+        fields = ()
 
 
 class FavouriteModelSerializer(ModelSerializer):

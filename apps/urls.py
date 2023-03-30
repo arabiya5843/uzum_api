@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from apps.views import CategoryModelViewSet, ShopModelViewSet, ProductModelViewSet, CartModelViewSet, \
-    ReportModelViewSet, OrderModelViewSet, FavouriteModelViewSet, SubCategoryModelViewSet, ProductImageModelViewSet
+    WishlistModelViewSet, OrderModelViewSet, FavouriteModelViewSet, SubCategoryModelViewSet, ProductImageModelViewSet
 
 from apps.user.views import ClientModelViewSet, MerchantModelViewSet, UserViewSet
 
@@ -15,7 +15,7 @@ router.register('product', ProductModelViewSet, 'product')
 router.register('product-image', ProductImageModelViewSet, 'product_image')
 router.register('cart', CartModelViewSet, 'cart')
 router.register('favourite', FavouriteModelViewSet, 'favourite')
-router.register('report', ReportModelViewSet, 'report')
+router.register('wishlist', WishlistModelViewSet, 'report')
 router.register('order', OrderModelViewSet, 'order')
 router.register('user', UserViewSet, 'user')
 router.register('client', ClientModelViewSet, 'client')

@@ -3,7 +3,6 @@ from datetime import timedelta
 from pathlib import Path
 
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-@$kjjbu2(tsl=!szi0us9=x6hfie59%iiv2-q51x)@0=#bl6=w'
 
@@ -164,13 +163,6 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-# SWAGGER_SETTINGS = {
-#     'SECURITY_DEFINITIONS': {
-#         'Basic': {
-#             'type': 'basic'
-#         }
-#     }
-# }
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
